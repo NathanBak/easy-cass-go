@@ -36,4 +36,6 @@ func main() {
 	for _, tableName := range tableNames {
 		fmt.Printf("\t%s\n", tableName)
 	}
+
+	session.Close()
 }

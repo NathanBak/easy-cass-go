@@ -27,6 +27,7 @@ func GetKeyspace(session *gocql.Session) string {
 	return sessionKeyspace[session]
 }
 
+// setKeyspace associates the specified keyspace with the provided session
 func setKeyspace(session *gocql.Session, keyspace string) {
 	sessionKeyspaceLock.Lock()
 	defer sessionKeyspaceLock.Unlock()

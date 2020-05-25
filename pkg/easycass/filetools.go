@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+// zipinfo is a simple struct used to store information read from the secure
+// connect bundle zip file
 type zipinfo struct {
 	hostname  string
 	port      int
@@ -49,6 +51,7 @@ func readZip(zippath string) (*zipinfo, error) {
 		}
 	}
 
+	// Setup tlsconfig based on the cert, key and ca.crt file contents
 	cert, _ := tls.X509KeyPair(filebytes["cert"], filebytes["key"])
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(filebytes["ca.crt"])

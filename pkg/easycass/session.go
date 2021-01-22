@@ -22,6 +22,7 @@ func GetSession(username, password, pathToZip string) (*gocql.Session, error) {
 		Username: username,
 		Password: password,
 	}
+	cluster.Port = zi.port
 	cluster.Hosts = []string{fmt.Sprintf("%s:%d", zi.hostname, zi.port)}
 
 	cluster.SslOpts = &gocql.SslOptions{

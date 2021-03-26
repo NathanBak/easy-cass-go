@@ -39,26 +39,27 @@ func setKeyspace(session *gocql.Session, keyspace string) {
 // the information, an error is returned.  If the keyspace does not exist or
 // does not contain any tables, an empty slice will be returned.
 func GetKeyspaceTableNames(session *gocql.Session, keyspace string) ([]string, error) {
-	var tableNames []string
+	tableNames := []string{}
 
 	if session == nil {
 		return tableNames, errors.New("nil session")
 	}
 
-	query := fmt.Sprintf("SELECT table_name FROM system_schema.tables WHERE keyspace_name = '%s';", keyspace)
+	query := fmt.Sprintf("SELECT table_name, keyspace_name FROM system_schema.tables WHERE keyspace_name = '%s';", keyspace)
 
 	q := session.Query(query)
 	iter := q.Iter()
 
 	var tableName string
+	var keyspaceName string // Necessary to avoid "Schema queries require keyspace_name column" error
 	scanner := iter.Scanner()
 	for scanner.Next() {
-		err := scanner.Scan(&tableName)
+		err := scanner.Scan(&tableName, &keyspaceName)
 		if err != nil {
 			return tableNames, err
 		}
 		tableNames = append(tableNames, tableName)
 	}
 
-	return tableNames, nil
+	return tableNames, iter.Close()
 }

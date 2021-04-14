@@ -51,15 +51,6 @@ func readZip(zippath string) (*zipinfo, error) {
 		}
 	}
 
-	// Setup tlsconfig based on the cert, key and ca.crt file contents
-	cert, _ := tls.X509KeyPair(filebytes["cert"], filebytes["key"])
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(filebytes["ca.crt"])
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-	}
-
 	// we only need the keyspace from the config.json file
 	keyspace, err := readConfigJSON(filebytes["config.json"])
 	if err != nil {
@@ -71,6 +62,16 @@ func readZip(zippath string) (*zipinfo, error) {
 	hostname, port, err := readCqlshrc(filebytes["cqlshrc"])
 	if err != nil {
 		return nil, err
+	}
+
+	// Setup tlsconfig based on the cert, key and ca.crt file contents
+	cert, _ := tls.X509KeyPair(filebytes["cert"], filebytes["key"])
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(filebytes["ca.crt"])
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      caCertPool,
+		ServerName:   hostname,
 	}
 
 	return &zipinfo{

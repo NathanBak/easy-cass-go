@@ -47,4 +47,5 @@ func main() {
 
 ## Examples
 
-The simplesession example connects to an Astra Database and then lists the tables in the default keyspace.
+- The [simplesession](examples/simplesession/main.go) example connects to an Astra Database and then lists the tables in the default keyspace.
+- The [configuredsession](examples/configuredsession/main.go) allows modification of the cluster configuration before creating the session to connect to the Astra Database and list the tables in the default keyspace.

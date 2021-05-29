@@ -4,8 +4,7 @@ import (
 	"archive/zip"
 	"bufio"
 	"bytes"
-	"crypto/tls"
-	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -13,13 +12,67 @@ import (
 	"strings"
 )
 
-// zipinfo is a simple struct used to store information read from the secure
-// connect bundle zip file
-type zipinfo struct {
-	hostname  string
-	port      int
-	tlsConfig *tls.Config
-	keyspace  string
+// Names of properties returned by ExtractProperties()
+const (
+	PropertyHostname = "hostname"
+	PropertyPort     = "port"
+	PropertyKeyspace = "keyspace"
+	PropertyCert     = "certPEMBlock"
+	PropertyKey      = "keyPemBlock"
+	PropertyCaCrt    = "pemCerts"
+)
+
+// ExtractProperties parses through various files in the creds zip and returns a map of
+// properties needed in order to connect to the database.  Values of cert related
+// properties are encoded in base64.
+func ExtractProperties(zippath string) (map[string]string, error) {
+	r, err := zip.OpenReader(zippath)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	filebytes := make(map[string][]byte)
+
+	// Read contents of files we want and place them into the filebytes map
+	for _, f := range r.File {
+		switch f.Name {
+		case "cert", "key", "ca.crt", "config.json", "cqlshrc":
+			reader, err := f.Open()
+			if err != nil {
+				return nil, err
+			}
+
+			buf, err := ioutil.ReadAll(reader)
+			if err != nil {
+				return nil, err
+			}
+
+			filebytes[f.Name] = buf
+		}
+	}
+
+	// we only need the keyspace from the config.json file
+	keyspace, err := readConfigJSON(filebytes["config.json"])
+	if err != nil {
+		return nil, err
+	}
+
+	// get hostname and port from the cqlshrc file (the port in config.json is
+	// not the correct one)
+	hostname, port, err := readCqlshrc(filebytes["cqlshrc"])
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]string{
+		"hostname":     hostname,
+		"port":         strconv.Itoa(port),
+		"keyspace":     keyspace,
+		"certPEMBlock": base64.StdEncoding.EncodeToString(filebytes["cert"]),
+		"keyPemBlock":  base64.StdEncoding.EncodeToString(filebytes["key"]),
+		"pemCerts":     base64.StdEncoding.EncodeToString(filebytes["ca.crt"]),
+	}, nil
 }
 
 // readZip parses through various files in the creds zip and extracts
@@ -64,22 +117,7 @@ func readZip(zippath string) (*zipinfo, error) {
 		return nil, err
 	}
 
-	// Setup tlsconfig based on the cert, key and ca.crt file contents
-	cert, _ := tls.X509KeyPair(filebytes["cert"], filebytes["key"])
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(filebytes["ca.crt"])
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-		ServerName:   hostname,
-	}
-
-	return &zipinfo{
-		hostname:  hostname,
-		port:      port,
-		tlsConfig: tlsConfig,
-		keyspace:  keyspace,
-	}, nil
+	return newZipinfo(hostname, port, keyspace, filebytes["cert"], filebytes["key"], filebytes["ca.crt"])
 }
 
 func readConfigJSON(buf []byte) (keyspace string, err error) {

@@ -20,28 +20,28 @@ The easiest way to get up and running is to call the `easycass.GetSession()` fun
 package main
 
 import (
-	"log"
-
+    "log"
     "github.com/NathanBak/easy-cass-go/pkg/easycass"
 )
 
 func main() {
 
     // Specify the client ID and secret and the path to the secure connect bundle
-	username  := "clientID"
-	password  := "clientSecret"
-	pathToZip := "/home/me/Downloads/secure-connect-databasename.zip"
+    username  := "clientID"
+    password  := "clientSecret"
+    pathToZip := "/home/me/Downloads/secure-connect-databasename.zip"
 
-	// This creates and returns the gocql.Session
-	session, err := easycass.GetSession(username, password, pathToZip)
-	if err != nil {
-		log.Fatal(err)
+    // This creates and returns the gocql.Session
+    session, err := easycass.GetSession(username, password, pathToZip)
+    if err != nil {
+        log.Fatal(err)
     }
     
     // Do something neat
 
     // All done
     session.Close()
+}
 ```
 
 ## Examples

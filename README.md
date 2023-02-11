@@ -1,3 +1,7 @@
+# THIS REPOSITORY HAS BEEN ARCHIVED
+
+When this project was first created, it was cumbersome to configure Go code to talk to Datastax Astra database.  But now the [Stargate Golang gRPC Client](https://github.com/stargate/stargate-grpc-go-client) is available--I've started using it and find it to be excellent.  See also the [Datastax Documentation](https://docs.datastax.com/en/astra-serverless/docs/develop/api-grpc/gRPC-go-client.html) for more information on using the client.
+
 # easy-cass-go
 
 The easy-cass-go project makes it easy for go code to connect to a Datastax Astra Cassandra database.
